@@ -2,12 +2,15 @@ import json
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .EmailBackend import EmailBackend
 from .models import Attendance, Session, Subject
+from .decorators import secure_ajax_view, ajax_login_required
 
 # Create your views here.
 
@@ -62,13 +65,14 @@ def doLogin(request, **kwargs):
 
 
 
+@login_required
 def logout_user(request):
     if request.user != None:
         logout(request)
     return redirect("/")
 
 
-@csrf_exempt
+@secure_ajax_view(allowed_methods=['POST'])
 def get_attendance(request):
     subject_id = request.POST.get('subject')
     session_id = request.POST.get('session')
